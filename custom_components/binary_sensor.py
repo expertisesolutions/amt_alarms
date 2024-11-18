@@ -33,7 +33,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up Intelbras AMT Alarm sensors from a config entry."""
-    hub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
 
     sensors = []
     for i in range(hub.max_sensors):
@@ -56,12 +56,12 @@ class AlarmSensor(BinarySensorEntity):
 
     def __init__(self, index, hub):
         """Initialize motion sensor entity representation."""
-        LOGGER.error("AlarmSensor instantiation")
-        print("AlarmSensor instantiation")
+        #LOGGER.error("AlarmSensor instantiation")
+        #print("AlarmSensor instantiation")
         self.__index = index
-        self.__hub = hub
-        self._name = hub.name + " motion sensor " + str(index + 1)
-        self._unique_id = hub.name + "_motion_" + str(index)
+        self.hub = hub
+        self._name = self.hub.alarm.model + " Motion Sensor " + str(self.__index+1)
+        self._unique_id = self.hub.alarm.model + "_" + self.hub.alarm._mac_address.hex() + "_motion_" + str(self.__index+1)
         self._state = STATE_UNAVAILABLE
 
     @property
@@ -87,12 +87,12 @@ class AlarmSensor(BinarySensorEntity):
     async def async_added_to_hass(self):
         """Entity was added to Home Assistant."""
         # print ("Binary Sensor is calling listen event (not async)", file=sys.stderr)
-        self.__hub.listen_event(self)
+        self.hub.listen_event(self)
 
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
         # print ("Binary Sensor is calling REMOVE listen event", file=sys.stderr)
-        self.__hub.remove_listen_event(self)
+        self.hub.remove_listen_event(self)
 
     @property
     def name(self):
@@ -101,8 +101,8 @@ class AlarmSensor(BinarySensorEntity):
 
     @property
     def panel_unique_id(self):
-        """Return the unique id for the original panel."""
-        return "Alarm Panel.alarm_panel"
+        """Return the unique id for the sync module."""
+        return self.hub.alarm.model + "_" + self.hub.alarm._mac_address.hex() + "_alarm_panel"
 
     @property
     def unique_id(self):
@@ -121,14 +121,14 @@ class AlarmSensor(BinarySensorEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        self.__hub.listen_event(self)
+        self.hub.listen_event(self)
         # print ("Binary Sensor is calling listen event (from async)", file=sys.stderr)
-        await self.__hub.async_update()
+        await self.hub.async_update()
 
     def update_state(self):
         """Update synchronously to current state."""
         old_state = self._state
-        open_sensors = self.__hub.get_open_sensors()
+        open_sensors = self.hub.get_open_sensors()
         st = open_sensors[self.__index]
         # print ("Binary sensor data is ", open_sensors, " and st is ", st, file=sys.stderr)
         if st is None:
@@ -141,9 +141,9 @@ class AlarmSensor(BinarySensorEntity):
         return self._state != old_state
 
     @callback
-    def hub_update(self):
+    def alarm_update(self):
         """Receive callback to update state from Hub."""
-        # print ("Binary sensor is updating from hub", file=sys.stderr)
+        #print ("Binary sensor is updating from hub", file=sys.stderr)
         if self.update_state():
             self.async_write_ha_state()
 

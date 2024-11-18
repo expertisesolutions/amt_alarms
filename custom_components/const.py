@@ -4,8 +4,9 @@ import logging
 
 LOGGER = logging.getLogger(__package__)
 
-DOMAIN = "amt_alarm"
+DOMAIN = "amt_alarms"
 
+ADDONS_COORDINATOR = "amt_alarm_coordinator"
 CONF_PORT = "port"
 CONF_PASSWORD = "password"
 CONF_NIGHT_PARTITION_1 = "night_partition_1"

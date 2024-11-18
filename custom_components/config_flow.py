@@ -105,8 +105,11 @@ async def validate_user_input(hass: core.HomeAssistant, data):
     # )
 
     # print("port value is", data["port"], file=sys.stderr)
+    password=None
+    if "password" in data:
+        password=data["password"]
     hub = AlarmHub(
-        hass=hass, config_entry=None, port=data["port"], password=data["password"]
+        hass=hass, config_entry=None, port=data["port"], password=password
     )
 
     if not await hub.wait_connection():

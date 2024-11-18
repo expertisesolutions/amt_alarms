@@ -17,7 +17,7 @@
                     "away_partition_4": "Away mode requires partition 4 to be: ",
                     "has_away_mode": "Enable away mode"
                 },
-                "title": "Configure Night mode partitions for Intelbras alarm panel"
+                "title": "Configure Away mode partitions for Intelbras alarm panel"
             },
             "home_mode": {
                 "data": {
@@ -40,8 +40,8 @@
             },
             "user": {
                 "data": {
-                    "password": "[%key:common::config_flow::data::password%]",
-                    "port": "[%key:common::config_flow::data::port%]"
+                    "password": "password",
+                    "port": "local port"
                 },
                 "title": "Configuration for Intelbras alarm panel"
             }

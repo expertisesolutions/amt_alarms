@@ -1,14 +1,14 @@
 {
-  "domain": "amt_alarm",
+  "domain": "amt_alarms",
   "name": "Intelbras AMT Alarms",
   "codeowners": ["@felipealmeida", "@otaviolcs3"],
-  "config_flow": false,
+  "config_flow": true,
   "dependencies": ["alarm_control_panel", "binary_sensor"],
-  "documentation": "https://www.home-assistant.io/integrations/amt_alarm",
+  "documentation": "https://github.com/expertisesolutions/amtalarm",
   "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": ["crcengine==0.2"],
+  "requirements": ["crcengine==0.2", "amtalarm @ git+https://github.com/expertisesolutions/amtalarm.git"],
   "ssdp": [],
   "zeroconf": [],
   "version": "0.0.1"

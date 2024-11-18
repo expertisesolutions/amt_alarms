@@ -4,11 +4,6 @@ from typing import Union
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -16,7 +11,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
+    AlarmControlPanelState,
     AlarmControlPanelEntityFeature,
+    CodeFormat
 )
 
 from . import AlarmHub
@@ -32,13 +29,12 @@ from .const import (
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the alarm platform."""
-    print("setup_platform")
-    LOGGER.error("setup_platform")
+    LOGGER.debug("setup_platform alarm_control_panel")
 
     if discovery_info == {}:
-        LOGGER.error("disocvery is empty")
+        LOGGER.debug("disocvery is empty")
     else:
-        LOGGER.error("discovery is not empty")
+        LOGGER.debug("discovery is not empty")
 
     hub = hass.data[DOMAIN]
     panels: list[Union[AlarmPanel, PartitionAlarmPanel]] = [AlarmPanel(hub)]
@@ -56,9 +52,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Intelbras AMT Alarms from a config entry."""
-    print("async setup entry")
-    LOGGER.error("async setup entry")
-    hub = hass.data[DOMAIN][entry.entry_id]
+    LOGGER.debug("async setup entry alarm_control_panel")
+    hub = entry.runtime_data
     panels: list[Union[AlarmPanel, PartitionAlarmPanel]] = [AlarmPanel(hub)]
     for i in range(hub.max_partitions):
         panels.append(PartitionAlarmPanel(hub, i))
@@ -72,8 +67,7 @@ async def async_setup_entry(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intelbras AMT Alarms component."""
-    print("async_setup")
-    LOGGER.error("async_setup")
+    LOGGER.debug("async_setup alarm_control_panel")
 
 
 class AlarmPanel(AlarmControlPanelEntity):
@@ -81,11 +75,21 @@ class AlarmPanel(AlarmControlPanelEntity):
 
     def __init__(self, hub: AlarmHub) -> None:
         """Initialize the alarm."""
-        LOGGER.error("AlarmPanel instantiation")
-        print("AlarmPanel instantiation")
-        self._state = STATE_UNAVAILABLE
+        LOGGER.debug("AlarmPanel instantiation")
+        self._internal_state = STATE_UNAVAILABLE
         self._by = "Felipe"
         self.hub = hub
+
+    @property
+    def code_arm_required(self) -> bool:
+        return self.hub.alarm.default_password == None
+
+    @property
+    def code_format(self) -> CodeFormat | None:
+        if self.code_arm_required:
+            return CodeFormat.NUMBER
+        else:
+            return None
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
@@ -115,37 +119,29 @@ class AlarmPanel(AlarmControlPanelEntity):
     @property
     def unique_id(self):
         """Return the unique id for the sync module."""
-        return self.name + ".alarm_panel"
+        return self.hub.alarm.model + "_" + self.hub.alarm._mac_address.hex() + "_alarm_panel"
 
     @property
     def name(self):
         """Return the name of the panel."""
-        return "Alarm panel"
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        return self.hub.alarm.model
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return AlarmControlPanelEntityFeature(
             (
-                # AlarmControlPanelEntityFeature.ARM_HOME
-                # if self.config_entry.data[CONF_HOME_MODE_ENABLED]
-                # else 0
-                0
+                AlarmControlPanelEntityFeature.ARM_HOME
+                if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]
+                else 0
             )
             | (
-                # AlarmControlPanelEntityFeature.ARM_AWAY
-                # if self.config_entry.data[CONF_AWAY_MODE_ENABLED]
-                # else 0
-                0
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]
+                else 0
             )
             | AlarmControlPanelEntityFeature.ARM_NIGHT
             | AlarmControlPanelEntityFeature.TRIGGER
-            | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
         )
 
     @property
@@ -160,7 +156,7 @@ class AlarmPanel(AlarmControlPanelEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Intelbras",
-            "model": "AMTxxxx",
+            "model": self.hub.alarm.model + " control panel",
             "sw_version": "Unknown",
         }
 
@@ -173,15 +169,19 @@ class AlarmPanel(AlarmControlPanelEntity):
         """Update the state of the device."""
         await self.hub.async_update()
 
+    @property
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        return self._internal_state
+
     def update_state(self):
         """Update synchronously to current state."""
         partitions = self.hub.get_partitions()
         triggered_partitions = self.hub.get_triggered_partitions()
-        old_state = self._state
+        old_state = self._internal_state
         if None in partitions:
-            self._state = STATE_UNAVAILABLE
+            self._internal_state = STATE_UNAVAILABLE
         elif not any(partitions):
-            self._state = STATE_ALARM_DISARMED
+            self._internal_state = AlarmControlPanelState.DISARMED
         else:
             night_partition_check = [False] * self.hub.max_partitions
             away_partition_check = [False] * self.hub.max_partitions
@@ -210,23 +210,23 @@ class AlarmPanel(AlarmControlPanelEntity):
                 #         == partitions[i]
                 #     )
             if all(night_partition_check):
-                self._state = STATE_ALARM_ARMED_NIGHT
+                self._internal_state = AlarmControlPanelState.ARMED_NIGHT
             # elif self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED] and all(
             #     away_partition_check
             # ):
-            #     self._state = STATE_ALARM_ARMED_AWAY
+            #     self._internal_state = AlarmControlPanelState.ARMED_AWAY
             # elif self.hub.config_entry.data[CONF_HOME_MODE_ENABLED] and all(
             #     home_partition_check
             # ):
-            #     self._state = STATE_ALARM_ARMED_HOME
+            #     self._internal_state = AlarmControlPanelState.ARMED_HOME
             else:
-                self._state = STATE_ALARM_DISARMED
+                self._internal_state = AlarmControlPanelState.DISARMED
         if True in triggered_partitions:
-            self._state = STATE_ALARM_TRIGGERED
-        return self._state != old_state
+            self._internal_state = AlarmControlPanelState.TRIGGERED
+        return self._internal_state != old_state
 
     @callback
-    def hub_update(self):
+    def alarm_update(self):
         """Receive callback to update state from Hub."""
         if self.update_state():
             self.async_write_ha_state()
@@ -242,21 +242,32 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
     def __init__(self, hub: AlarmHub, index: int) -> None:
         """Initialize the alarm."""
         self.index = index
-        self._state = STATE_UNAVAILABLE
+        self._internal_state = STATE_UNAVAILABLE
         self._by = "Felipe"
         self.hub = hub
 
+    @property
+    def code_arm_required(self) -> bool:
+        return self.hub.alarm.default_password == None
+
+    @property
+    def code_format(self) -> CodeFormat | None:
+        if self.code_arm_required:
+            return CodeFormat.NUMBER
+        else:
+            return None
+
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
-        await self.hub.send_arm_partition(self.index)
+        await self.hub.alarm.send_arm_partition(self.index, code)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm night command."""
-        await self.hub.send_arm_partition(self.index)
+        await self.hub.alarm.send_arm_partition(self.index, code)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm night command."""
-        await self.hub.send_arm_partition(self.index)
+        await self.hub.alarm.send_arm_partition(self.index, code)
 
     async def async_added_to_hass(self):
         """Entity was added to Home Assistant."""
@@ -273,33 +284,35 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
 
     @property
     def panel_unique_id(self):
-        """Return the unique id for the original panel."""
-        return "Alarm Panel.alarm_panel"
+        """Return the unique id for the sync module."""
+        return self.hub.alarm.model + "_" + self.hub.alarm._mac_address.hex() + "_alarm_panel"
 
     @property
     def unique_id(self):
         """Return the unique id for the sync module."""
-        return self.panel_unique_id + ".partition" + str(self.index)
+        return self.hub.alarm.model + "_" + self.hub.alarm._mac_address.hex() + "_partition_" + str(self.index+1) + "_alarm_panel"
 
     @property
     def name(self):
         """Return the name of the panel."""
-        return "Alarm panel for partition " + str(self.index + 1)
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
+        return self.hub.alarm.model + " Partition " + str(self.index+1)
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return AlarmControlPanelEntityFeature(
-            AlarmControlPanelEntityFeature.ARM_NIGHT
-            | AlarmControlPanelEntityFeature.ARM_AWAY
-            | AlarmControlPanelEntityFeature.ARM_HOME
+            (
+                AlarmControlPanelEntityFeature.ARM_HOME
+                if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]
+                else 0
+            )
+            | (
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]
+                else 0
+            )
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
             | AlarmControlPanelEntityFeature.TRIGGER
-            | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
         )
 
     @property
@@ -314,7 +327,7 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": "Intelbras",
-            "model": "AMTxxxx",
+            "model": self.hub.alarm.model + " partition control panel",
             "sw_version": "Unknown",
             "via_device": (DOMAIN, self.panel_unique_id),
         }
@@ -328,30 +341,34 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
         """Update the state of the device."""
         await self.hub.async_update()
 
+    @property
+    def alarm_state(self) -> AlarmControlPanelState | None:
+        return self._internal_state
+
     def update_state(self):
         """Update synchronously to current state."""
         partitions = self.hub.get_partitions()
         triggered_partitions = self.hub.get_triggered_partitions()
-        old_state = self._state
+        old_state = self._internal_state
         if None in partitions:
-            self._state = STATE_UNAVAILABLE
+            self._internal_state = STATE_UNAVAILABLE
         elif partitions[self.index]:
-            self._state = STATE_ALARM_ARMED_NIGHT
+            self._internal_state = AlarmControlPanelState.ARMED_NIGHT
         else:
-            self._state = STATE_ALARM_DISARMED
+            self._internal_state = AlarmControlPanelState.DISARMED
         if (
             triggered_partitions[self.index] is not None
             and triggered_partitions[self.index]
         ):
-            self._state = STATE_ALARM_TRIGGERED
-        return self._state != old_state
+            self._internal_state = AlarmControlPanelState.TRIGGERED
+        return self._internal_state != old_state
 
     @callback
-    def hub_update(self):
+    def alarm_update(self):
         """Receive callback to update state from Hub."""
         if self.update_state():
             self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        await self.hub.send_disarm_partition(self.index)
+        await self.hub.alarm.send_disarm_partition(self.index, code)
