@@ -79,17 +79,13 @@ PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSO
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     LOGGER.debug("async_unload_entry")
-    # unload_ok = all(
-    #     await asyncio.gather(
-    #         *[
-    #             hass.config_entries.async_forward_entry_unload(entry, component)
-    #             for component in PLATFORMS
-    #         ]
-    #     )
-    # )
-    # if unload_ok:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        if DOMAIN in hass.data:
+            hass.data[DOMAIN].close()
+            hass.data[DOMAIN]  = None
+        else:
+            entry.runtime_data.close()
+            entry.runtime_data = None
 
     return unload_ok
 
@@ -225,41 +221,6 @@ class AlarmHub:
         """Check if the numbered partition is configured."""
         return self.alarm.is_partition_configured(index)
 
-
-# async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-#     """Set up the Intelbras AMT Alarms component."""
-#     LOGGER.error("__init__ async_setup")
-
-#     if DOMAIN not in config:
-#         return True
-
-#     config = config[DOMAIN]
-
-#     print("instantiating AlarmHub no entry")
-#     alarm = AlarmHub(hass, {}, config.get(CONF_PORT), config.get(CONF_PASSWORD))
-#     hass.data[DOMAIN] = alarm
-
-#     print("will wait connection and update")
-#     await alarm.wait_connection_and_update()
-
-#     print("wait connection and updated")
-    
-#     hass.helpers.discovery.load_platform(PLATFORMS, DOMAIN, {}, config)
-
-#     #alarm_control_panel.async_setup(
-#     #hass.async_create_task(async_initialize_alarm(hass, alarm, config))
-
-#     # panels: list[Union[AlarmPanel, PartitionAlarmPanel]] = [AlarmPanel(alarm, entry)]
-#     # for i in range(alarm.max_partitions):
-#     #     panels.append(PartitionAlarmPanel(alarm, i))
-
-#     # for panel in panels:
-#     #     panel.update_state()
-
-#     # add_entities(panels)
-    
-#     return True
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Intelbras AMT Alarms from a config entry."""
     password=None
@@ -270,17 +231,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = alarm
 
     await alarm.wait_connection_and_update()
-
-    # device_registry = dr.async_get(hass)
-
-    # device_registry.async_get_or_create(
-    #     config_entry_id=entry.entry_id,
-    #     identifiers={(DOMAIN, str(entry.data["port"]))},
-    #     manufacturer="Intelbras",
-    #     name=f"Intelbras",
-    #     model=alarm.alarm.model,
-    #     sw_version="0.0.1",
-    # )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
