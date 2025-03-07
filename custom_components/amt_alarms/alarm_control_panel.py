@@ -180,49 +180,12 @@ class AlarmPanel(AlarmControlPanelEntity):
         old_state = self._internal_state
         if None in partitions:
             self._internal_state = STATE_UNAVAILABLE
+        elif True in triggered_partitions:
+            self._internal_state = AlarmControlPanelState.TRIGGERED
         elif not any(partitions):
             self._internal_state = AlarmControlPanelState.DISARMED
         else:
-            night_partition_check = [False] * self.hub.max_partitions
-            away_partition_check = [False] * self.hub.max_partitions
-            home_partition_check = [False] * self.hub.max_partitions
-
-            for i in range(self.hub.max_partitions):
-                # if CONF_NIGHT_PARTITION_LIST[i] not in self.hub.config_entry.data:
-                    night_partition_check[i] = True
-                # else:
-                #     night_partition_check[i] = (
-                #         self.hub.config_entry.data[CONF_NIGHT_PARTITION_LIST[i]]
-                #         == partitions[i]
-                #     )
-                # if CONF_AWAY_PARTITION_LIST[i] not in self.hub.config_entry.data:
-                    away_partition_check[i] = True
-                # else:
-                #     away_partition_check[i] = (
-                #         self.hub.config_entry.data[CONF_AWAY_PARTITION_LIST[i]]
-                #         == partitions[i]
-                #     )
-                # if CONF_HOME_PARTITION_LIST[i] not in self.hub.config_entry.data:
-                    home_partition_check[i] = True
-                # else:
-                #     home_partition_check[i] = (
-                #         self.hub.config_entry.data[CONF_HOME_PARTITION_LIST[i]]
-                #         == partitions[i]
-                #     )
-            if all(night_partition_check):
-                self._internal_state = AlarmControlPanelState.ARMED_NIGHT
-            # elif self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED] and all(
-            #     away_partition_check
-            # ):
-            #     self._internal_state = AlarmControlPanelState.ARMED_AWAY
-            # elif self.hub.config_entry.data[CONF_HOME_MODE_ENABLED] and all(
-            #     home_partition_check
-            # ):
-            #     self._internal_state = AlarmControlPanelState.ARMED_HOME
-            else:
-                self._internal_state = AlarmControlPanelState.DISARMED
-        if True in triggered_partitions:
-            self._internal_state = AlarmControlPanelState.TRIGGERED
+            self._internal_state = AlarmControlPanelState.ARMED_NIGHT
         return self._internal_state != old_state
 
     @callback
