@@ -67,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     LOGGER.debug("async_unload_entry")
