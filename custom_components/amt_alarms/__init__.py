@@ -45,30 +45,21 @@ from .const import (
     LOGGER,
 )
 
+from config_flow import (
+    user_schema, night_partition_schema,
+    away_mode_partition_schema,
+    home_mode_partition_schema
+)
 # import traceback
 
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PORT): cv.port,
-                vol.Optional(CONF_PASSWORD): int,
-                vol.Optional(CONF_NIGHT_PARTITION_1): bool,
-                vol.Optional(CONF_NIGHT_PARTITION_2): bool,
-                vol.Optional(CONF_NIGHT_PARTITION_3): bool,
-                vol.Optional(CONF_NIGHT_PARTITION_4): bool,
-                vol.Optional(CONF_AWAY_MODE_ENABLED): bool,
-                vol.Optional(CONF_AWAY_PARTITION_1): bool,
-                vol.Optional(CONF_AWAY_PARTITION_2): bool,
-                vol.Optional(CONF_AWAY_PARTITION_3): bool,
-                vol.Optional(CONF_AWAY_PARTITION_4): bool,
-                vol.Optional(CONF_HOME_MODE_ENABLED): bool,
-                vol.Optional(CONF_HOME_PARTITION_1): bool,
-                vol.Optional(CONF_HOME_PARTITION_2): bool,
-                vol.Optional(CONF_HOME_PARTITION_3): bool,
-                vol.Optional(CONF_HOME_PARTITION_4): bool,
-            }
+        DOMAIN: vol.All(
+            vol.Schema(user_schema),
+            vol.Schema(night_partition_schema),
+            vol.Schema(away_mode_partition_schema),
+            vol.Schema(home_mode_partition_schema)
         )
     },
     extra=vol.ALLOW_EXTRA,
