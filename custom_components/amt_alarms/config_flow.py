@@ -162,10 +162,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
         if user_input is not None:
             try:
-                await validate_user_input(self.hass, user_input)
-
                 self.user_input = user_input
-
                 return self.async_create_entry(data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
