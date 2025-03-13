@@ -117,15 +117,17 @@ class AlarmHub:
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
+        for i in range(self.max_partitions):
+            await self.send_disarm_partition(i)
 
     async def async_alarm_arm_night(self, code=None):
         """Send disarm command."""
         for i in range(self.max_partitions):
             if CONF_NIGHT_PARTITION_LIST[i] in self.config_entry.data:
                 if self.config_entry.data[CONF_NIGHT_PARTITION_LIST[i]]:
-                    await self.send_arm_partition(i)
+                    await self.alarm.send_arm_partition(i)
             else:
-                await self.send_arm_partition(i)
+                await self.alarm.send_arm_partition(i)
 
     async def async_alarm_arm_away(self, code=None):
         """Send disarm command."""
@@ -133,9 +135,9 @@ class AlarmHub:
             for i in range(self.max_partitions):
                 if CONF_AWAY_PARTITION_LIST[i] in self.config_entry.data:
                     if self.config_entry.data[CONF_AWAY_PARTITION_LIST[i]]:
-                        self.send_arm_partition(i)
+                        self.alarm.send_arm_partition(i)
                 else:
-                    self.send_arm_partition(i)
+                    self.alarm.send_arm_partition(i)
 
     async def async_alarm_arm_home(self, code=None):
         """Send disarm command."""
@@ -143,9 +145,9 @@ class AlarmHub:
             for i in range(self.max_partitions):
                 if CONF_HOME_PARTITION_LIST[i] in self.config_entry.data:
                     if self.config_entry.data[CONF_HOME_PARTITION_LIST[i]]:
-                        await self.send_arm_partition(i)
+                        await self.alarm.send_arm_partition(i)
                 else:
-                    await self.send_arm_partition(i)
+                    await self.alarm.send_arm_partition(i)
 
     def close(self):
         """Close and free resources."""
