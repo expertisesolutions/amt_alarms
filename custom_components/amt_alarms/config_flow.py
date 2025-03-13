@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from . import AlarmHub
@@ -202,7 +201,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     #     return await self.async_step_net()
 
     @staticmethod
-    @callback
+    @core.callback
     def async_get_options_flow(
             config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
