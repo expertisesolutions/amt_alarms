@@ -157,13 +157,109 @@ async def validate_home_mode_input(hass: core.HomeAssistant, data):
     return {"title": "Name of the device"}
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
+
+    def __init__(self):
+        """Initialize input dictionaries."""
+        self.home_mode_input = {}
+        self.away_mode_input = {}
+        self.night_mode_input = {}
+        self.user_input = {}
+
+    async def async_step_home_mode(self, home_mode_input=None):
+        """Show and handle home mode step."""
+        errors = {}
+
+        if home_mode_input is not None:
+            try:
+                info = await validate_home_mode_input(self.hass, home_mode_input)
+                merge = self.user_input.copy()
+                merge.update(self.night_mode_input)
+                merge.update(self.away_mode_input)
+                merge.update(home_mode_input)
+                config = convert_input(merge)
+
+                self.home_mode_input = home_mode_input
+
+                return self.async_create_entry(title=info["title"], data=config)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        try:
+            r = self.async_show_form(
+                step_id="home_mode",
+                data_schema=vol.Schema(home_mode_partition_schema),
+                errors=errors,
+            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return r
+
+    async def async_step_away_mode(self, away_mode_input=None):
+        """Show and handle away mode step."""
+        errors = {}
+        # print("async_step_away_mode", away_mode_input)
+        if away_mode_input is not None:
+            try:
+                await validate_away_mode_input(self.hass, away_mode_input)
+                # print("away_mode_input", away_mode_input)
+
+                self.away_mode_input = away_mode_input
+
+                return await self.async_step_home_mode()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        try:
+            r = self.async_show_form(
+                step_id="away_mode",
+                data_schema=vol.Schema(away_mode_partition_schema),
+                errors=errors,
+            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return r
+
+    async def async_step_night_mode(self, night_mode_input=None):
+        """Show and handle night mode step."""
+        errors = {}
+        # print("async_step_night_mode", night_mode_input)
+        if night_mode_input is not None:
+            try:
+                await validate_night_mode_input(self.hass, night_mode_input)
+                # print("night_mode_input", night_mode_input)
+
+                self.night_mode_input = night_mode_input
+
+                return await self.async_step_away_mode()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        try:
+            r = self.async_show_form(
+                step_id="night_mode",
+                data_schema=vol.Schema(night_partition_schema),
+                errors=errors,
+            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return r
+
     async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
                 self.user_input = user_input
-                return self.async_create_entry(data=user_input)
+                return await self.async_step_night_mode()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
