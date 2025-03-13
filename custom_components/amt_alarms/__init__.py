@@ -118,7 +118,7 @@ class AlarmHub:
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         for i in range(self.max_partitions):
-            await self.send_disarm_partition(i)
+            await self.hub.send_disarm_partition(i)
 
     async def async_alarm_arm_night(self, code=None):
         """Send disarm command."""
