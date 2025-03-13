@@ -59,10 +59,12 @@ home_mode_partition_schema = {
     vol.Required(CONF_HOME_PARTITION_4, default=partition_none): partition_vol,
 }
 DATA_SCHEMA = vol.Schema(
-    #    {
-    user_schema,
-    #        **partition_schema,
-    #    }
+    {
+        user_schema,
+        night_partition_schema,
+        away_mode_partition_schema,
+        home_mode_partition_schema
+    }
 )
 
 
@@ -228,11 +230,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_night_mode(self, night_mode_input=None):
         """Show and handle night mode step."""
         errors = {}
-        # print("async_step_night_mode", night_mode_input)
+
         if night_mode_input is not None:
             try:
                 await validate_night_mode_input(self.hass, night_mode_input)
-                # print("night_mode_input", night_mode_input)
 
                 self.night_mode_input = night_mode_input
 
