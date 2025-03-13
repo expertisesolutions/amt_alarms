@@ -203,7 +203,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @core.callback
     def async_get_options_flow(
-            config_entry: ConfigEntry,
+            config_entry: config_entries.ConfigEntry,
     ) -> OptionsFlowHandler:
         """Create the options flow."""
         return OptionsFlowHandler()
