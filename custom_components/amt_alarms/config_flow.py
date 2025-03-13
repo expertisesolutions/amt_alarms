@@ -156,6 +156,32 @@ async def validate_home_mode_input(hass: core.HomeAssistant, data):
     # Return info that you want to store in the config entry.
     return {"title": "Name of the device"}
 
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
+        if user_input is not None:
+            try:
+                await validate_user_input(self.hass, user_input)
+
+                self.user_input = user_input
+
+                return self.async_create_entry(data=user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+        try:
+            r = self.async_show_form(
+                step_id="user", data_schema=vol.Schema(user_schema), errors=errors
+            )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return r
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Intelbras AMT Alarms."""
@@ -173,6 +199,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     # async def async_step_init(self, user_input=None):
     #     errors = {}
     #     return await self.async_step_net()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+            config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Create the options flow."""
+        return OptionsFlowHandler()
 
     async def async_step_home_mode(self, home_mode_input=None):
         """Show and handle home mode step."""
