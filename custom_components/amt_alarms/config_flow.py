@@ -157,7 +157,7 @@ async def validate_home_mode_input(hass: core.HomeAssistant, data):
     return {"title": "Name of the device"}
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    async def async_step_user(self, user_input=None):
+    async def async_step_init(self, user_input=None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -176,7 +176,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 errors["base"] = "unknown"
         try:
             r = self.async_show_form(
-                step_id="user", data_schema=vol.Schema(user_schema), errors=errors
+                step_id="init", data_schema=vol.Schema(user_schema), errors=errors
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
