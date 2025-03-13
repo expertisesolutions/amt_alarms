@@ -45,8 +45,7 @@ from .const import (
     LOGGER,
 )
 
-
-from .config_flow import (
+from .schema import (
     user_schema, night_partition_schema,
     away_mode_partition_schema,
     home_mode_partition_schema
