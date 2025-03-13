@@ -58,13 +58,11 @@ home_mode_partition_schema = {
     vol.Required(CONF_HOME_PARTITION_3, default=partition_none): partition_vol,
     vol.Required(CONF_HOME_PARTITION_4, default=partition_none): partition_vol,
 }
-DATA_SCHEMA = vol.Schema(
-    {
-        user_schema,
-        night_partition_schema,
-        away_mode_partition_schema,
-        home_mode_partition_schema
-    }
+DATA_SCHEMA = vol.All(
+    vol.Schema({ user_schema }),
+    vol.Schema({ night_partition_schema }),
+    vol.Schema({ away_mode_partition_schema }),
+    vol.Schema({ home_mode_partition_schema }),
 )
 
 
