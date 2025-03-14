@@ -116,7 +116,7 @@ class AlarmHub:
 
     async def async_alarm_arm_mode(self, mode_list, code=None):
         """Send arm command with specific mode list"""
-        partitions = range(self.max_partitions)
+        partitions = [*range(self.max_partitions)]
         for i in partitions:
             if (mode_list[i] not in self.config_entry.data or
                 self.config_entry.data[mode_list[i]] != partition_on):
