@@ -30,7 +30,8 @@ from .const import (
 from .schema import (
     user_schema, night_partition_schema,
     away_mode_partition_schema,
-    home_mode_partition_schema
+    home_mode_partition_schema,
+    partition_on, partition_off, partition_none,
 )
 
 _LOGGER = logging.getLogger(__name__)

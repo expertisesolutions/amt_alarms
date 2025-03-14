@@ -48,7 +48,8 @@ from .const import (
 from .schema import (
     user_schema, night_partition_schema,
     away_mode_partition_schema,
-    home_mode_partition_schema
+    home_mode_partition_schema,
+    partition_on, partition_off, partition_none,
 )
 # import traceback
 
@@ -118,7 +119,7 @@ class AlarmHub:
         partitions = range(self.max_partitions)
         for i in partitions:
             if (mode_list[i] not in self.config_entry.data or
-                not self.config_entry.data[mode_list[i]]):
+                self.config_entry.data[mode_list[i]] == partition_off):
                 partitions.remove(i)
         if len(partitions) == self.max_partitions:
             await self.alarm.send_arm(code)
