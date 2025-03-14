@@ -112,6 +112,7 @@ class AlarmHub:
         for i in range(self.max_partitions):
             await self.alarm.send_disarm_partition(i)
 
+
     async def async_alarm_arm_mode(self, mode_list, code=None):
         """Send arm command with specific mode list"""
         partitions = range(self.max_partitions)
