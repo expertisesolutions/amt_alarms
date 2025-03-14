@@ -120,7 +120,10 @@ class AlarmHub:
         partitions = [*range(self.max_partitions)]
         for i in partitions:
             LOGGER.debug(f"mode_list[i] not in self.config_entry.data: {mode_list[i] not in self.config_entry.data}")
-            LOGGER.debug(f"self.config_entry.data[mode_list[i]] != partition_on: {self.config_entry.data[mode_list[i]] != partition_on}")
+            if mode_list[i] in self.config_entry.data:
+                LOGGER.debug(f"self.config_entry.data[mode_list[i]] != partition_on: {self.config_entry.data[mode_list[i]] != partition_on}")
+            else:
+                LOGGER.debug(f"mode_list[i] not in self.config_entry.data[]")
             LOGGER.debug(f"i {i} mode_list[i] {mode_list[i]}")
             if (mode_list[i] not in self.config_entry.data or
                 self.config_entry.data[mode_list[i]] != partition_on):
