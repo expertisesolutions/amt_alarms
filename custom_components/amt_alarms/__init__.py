@@ -119,9 +119,13 @@ class AlarmHub:
         LOGGER.debug(f"config_entry {self.config_entry.data}")
         partitions = [*range(self.max_partitions)]
         for i in partitions:
+            LOGGER.debug(f"mode_list[i] not in self.config_entry.data: {mode_list[i] not in self.config_entry.data}")
+            LOGGER.debug(f"self.config_entry.data[mode_list[i]] != partition_on: {self.config_entry.data[mode_list[i]] != partition_on}")
+            LOGGER.debug(f"i {i} mode_list[i] {mode_list[i]}")
             if (mode_list[i] not in self.config_entry.data or
                 self.config_entry.data[mode_list[i]] != partition_on):
                 partitions.remove(i)
+        LOGGER.debug(f"len(partitions) {len(partitions)} self.max_partitions {self.max_partitions}")
         if len(partitions) == self.max_partitions:
             await self.alarm.send_arm(code)
         else:
