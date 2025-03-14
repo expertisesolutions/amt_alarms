@@ -179,9 +179,9 @@ class AlarmPanel(AlarmControlPanelEntity):
         elif not any(partitions):
             self._internal_state = AlarmControlPanelState.DISARMED
         else:
-            is_armed_night = _is_armed_mode(CONF_NIGHT_PARTITION_LIST)
-            is_armed_home = _is_armed_mode(CONF_HOME_PARTITION_LIST)
-            is_armed_away = _is_armed_mode(CONF_AWAY_PARTITION_LIST)
+            is_armed_night = self._is_armed_mode(CONF_NIGHT_PARTITION_LIST)
+            is_armed_home = self._is_armed_mode(CONF_HOME_PARTITION_LIST)
+            is_armed_away = self._is_armed_mode(CONF_AWAY_PARTITION_LIST)
 
             if is_armed_home:
                 self._internal_state = AlarmControlPanelState.ARMED_HOME
