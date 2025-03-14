@@ -27,6 +27,8 @@ from .const import (
     LOGGER,
 )
 
+from .schema import partition_none
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the alarm platform."""
     LOGGER.debug("setup_platform alarm_control_panel")
