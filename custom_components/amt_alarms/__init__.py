@@ -115,7 +115,7 @@ class AlarmHub:
     async def async_alarm_arm_night(self, code=None):
         """Send disarm command."""
         for i in range(self.max_partitions):
-            LOGGER.debug(f"printing config_entry data {self.config_entry.data}")
+            LOGGER.debug(f"printing config_entry data {self.config_entry.data} i: {i} name: {CONF_NIGHT_PARTITION_LIST[i]} value: {self.config_entry.data[CONF_NIGHT_PARTITION_LIST[i]]}")
             if CONF_NIGHT_PARTITION_LIST[i] in self.config_entry.data:
                 if self.config_entry.data[CONF_NIGHT_PARTITION_LIST[i]]:
                     await self.alarm.send_arm_partition(i)
