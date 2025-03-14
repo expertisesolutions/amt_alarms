@@ -116,8 +116,8 @@ class AlarmHub:
         """Send arm command with specific mode list"""
         partitions = range(self.max_partitions)
         for i in partitions:
-            if mode_list[i] not in self.config_entry.data:
-                or not self.config_entry.data[mode_list[i]]:
+            if (mode_list[i] not in self.config_entry.data or
+                not self.config_entry.data[mode_list[i]]):
                 partitions.remove(i)
         if len(partitions) == self.max_partitions:
             await self.alarm.send_arm(code)
