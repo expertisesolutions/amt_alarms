@@ -137,7 +137,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self):
         """Initialize input dictionaries."""
-        self.home_mode_input = {}
         self.away_mode_input = {}
         self.night_mode_input = {}
         self.user_input = {}
@@ -149,16 +148,34 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if home_mode_input is not None:
             try:
                 info = await validate_home_mode_input(self.hass, home_mode_input)
-                merge = self.user_input.copy()
-                merge.update(self.night_mode_input)
-                merge.update(self.away_mode_input)
-                merge.update(home_mode_input)
-                config = convert_input(merge)
+                #merge = self.user_input.copy()
+                #merge.update(self.night_mode_input)
+                #merge.update(self.away_mode_input)
+                #merge.update(home_mode_input)
+                #config = convert_input(merge)
+                device_config = {
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_AWAY_MODE_ENABLED: self.away_mode_input[CONF_AWAY_MODE_ENABLED],
+                    CONF_AWAY_PARTITION_1: self.away_mode_input[CONF_AWAY_PARTITION_1],
+                    CONF_AWAY_PARTITION_2: self.away_mode_input[CONF_AWAY_PARTITION_2],
+                    CONF_AWAY_PARTITION_3: self.away_mode_input[CONF_AWAY_PARTITION_3],
+                    CONF_AWAY_PARTITION_4: self.away_mode_input[CONF_AWAY_PARTITION_4],
+                    CONF_HOME_MODE_ENABLED: home_mode_input[CONF_HOME_MODE_ENABLED],
+                    CONF_HOME_PARTITION_1: home_mode_input[CONF_HOME_PARTITION_1],
+                    CONF_HOME_PARTITION_2: home_mode_input[CONF_HOME_PARTITION_2],
+                    CONF_HOME_PARTITION_3: home_mode_input[CONF_HOME_PARTITION_3],
+                    CONF_HOME_PARTITION_4: home_mode_input[CONF_HOME_PARTITION_4],
+                    CONF_NIGHT_PARTITION_1: self.night_mode_input[CONF_NIGHT_PARTITION_1],
+                    CONF_NIGHT_PARTITION_2: self.night_mode_input[CONF_NIGHT_PARTITION_2],
+                    CONF_NIGHT_PARTITION_3: self.night_mode_input[CONF_NIGHT_PARTITION_3],
+                    CONF_NIGHT_PARTITION_4: self.night_mode_input[CONF_NIGHT_PARTITION_4],
+                    }
 
-                self.home_mode_input = home_mode_input
+                LOGGER.debug(f"device_config {device_config}")
 
                 return self.async_create_entry(title=info["title"],
-                                               data=config)
+                                               data=device_config)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
