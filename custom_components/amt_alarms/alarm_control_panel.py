@@ -160,7 +160,7 @@ class AlarmPanel(AlarmControlPanelEntity):
     def alarm_state(self) -> AlarmControlPanelState | None:
         return self._internal_state
 
-    def _is_armed_mode(self, mode_list):
+    def _is_armed_mode(self, partitions, mode_list):
         for i in range(self.hub.max_partitions):
             value = partition_none
             if mode_list[i] in self.hub.config_entry.data:
@@ -181,9 +181,9 @@ class AlarmPanel(AlarmControlPanelEntity):
         elif not any(partitions):
             self._internal_state = AlarmControlPanelState.DISARMED
         else:
-            is_armed_night = self._is_armed_mode(CONF_NIGHT_PARTITION_LIST)
-            is_armed_home = self._is_armed_mode(CONF_HOME_PARTITION_LIST)
-            is_armed_away = self._is_armed_mode(CONF_AWAY_PARTITION_LIST)
+            is_armed_night = self._is_armed_mode(partitions, CONF_NIGHT_PARTITION_LIST)
+            is_armed_home = self._is_armed_mode(partitions, CONF_HOME_PARTITION_LIST)
+            is_armed_away = self._is_armed_mode(partitions, CONF_AWAY_PARTITION_LIST)
 
             if is_armed_home:
                 self._internal_state = AlarmControlPanelState.ARMED_HOME
