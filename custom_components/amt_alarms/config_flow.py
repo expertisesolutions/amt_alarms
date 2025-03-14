@@ -154,8 +154,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 #merge.update(home_mode_input)
                 #config = convert_input(merge)
                 device_config = {
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_PORT: self.user_input[CONF_PORT],
+                    CONF_PASSWORD: self.user_input[CONF_PASSWORD],
                     CONF_AWAY_MODE_ENABLED: self.away_mode_input[CONF_AWAY_MODE_ENABLED],
                     CONF_AWAY_PARTITION_1: self.away_mode_input[CONF_AWAY_PARTITION_1],
                     CONF_AWAY_PARTITION_2: self.away_mode_input[CONF_AWAY_PARTITION_2],
