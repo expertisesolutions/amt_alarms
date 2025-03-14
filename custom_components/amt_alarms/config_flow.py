@@ -158,7 +158,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 self.home_mode_input = home_mode_input
 
                 return self.async_create_entry(title=info["title"],
-                                               data={config})
+                                               data=config)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -295,7 +295,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.home_mode_input = home_mode_input
 
                 return self.async_create_entry(title=info["title"],
-                                               data={config})
+                                               data=config)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
