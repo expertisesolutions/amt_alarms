@@ -112,35 +112,33 @@ class AlarmHub:
         for i in range(self.max_partitions):
             await self.alarm.send_disarm_partition(i)
 
+    async def async_alarm_arm_mode(self, mode_list, code=None):
+        """Send arm command with specific mode list"""
+        partitions = range(self.max_partitions)
+        for i in partitions:
+            if mode_list[i] not in self.config_entry.data:
+                or not self.config_entry.data[mode_list[i]]:
+                partitions.remove(i)
+        if len(partitions) == self.max_partitions:
+            await self.alarm.send_arm(code)
+        else:
+            for i in partitions:
+                await self.alarm.send_arm_partition(i, code)
+        
+
     async def async_alarm_arm_night(self, code=None):
-        """Send disarm command."""
-        for i in range(self.max_partitions):
-            LOGGER.debug(f"printing config_entry data {self.config_entry.data} i: {i} name: {CONF_NIGHT_PARTITION_LIST[i]} value: {self.config_entry.data[CONF_NIGHT_PARTITION_LIST[i]]}")
-            if CONF_NIGHT_PARTITION_LIST[i] in self.config_entry.data:
-                if self.config_entry.data[CONF_NIGHT_PARTITION_LIST[i]]:
-                    await self.alarm.send_arm_partition(i)
-            else:
-                await self.alarm.send_arm_partition(i)
+        """Send arm night command."""
+        await self.async_alarm_arm_mode(CONF_NIGHT_PARTITION_LIST, code)
 
     async def async_alarm_arm_away(self, code=None):
-        """Send disarm command."""
+        """Send arm await command."""
         if self.config_entry.data[CONF_AWAY_MODE_ENABLED]:
-            for i in range(self.max_partitions):
-                if CONF_AWAY_PARTITION_LIST[i] in self.config_entry.data:
-                    if self.config_entry.data[CONF_AWAY_PARTITION_LIST[i]]:
-                        self.alarm.send_arm_partition(i)
-                else:
-                    self.alarm.send_arm_partition(i)
+            await self.async_alarm_arm_mode(CONF_AWAY_PARTITION_LIST, code)
 
     async def async_alarm_arm_home(self, code=None):
-        """Send disarm command."""
+        """Send arm await command."""
         if self.config_entry.data[CONF_HOME_MODE_ENABLED]:
-            for i in range(self.max_partitions):
-                if CONF_HOME_PARTITION_LIST[i] in self.config_entry.data:
-                    if self.config_entry.data[CONF_HOME_PARTITION_LIST[i]]:
-                        await self.alarm.send_arm_partition(i)
-                else:
-                    await self.alarm.send_arm_partition(i)
+            await self.async_alarm_arm_mode(CONF_HOME_PARTITION_LIST, code)
 
     def close(self):
         """Close and free resources."""
