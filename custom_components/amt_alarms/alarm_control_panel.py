@@ -158,7 +158,7 @@ class AlarmPanel(AlarmControlPanelEntity):
     def alarm_state(self) -> AlarmControlPanelState | None:
         return self._internal_state
 
-    def _is_armed_mode(mode_list):
+    def _is_armed_mode(self, mode_list):
         for i in range(self.hub.max_partitions):
             value = partition_none
             if mode_list[i] in self.hub.config_entry.data:
