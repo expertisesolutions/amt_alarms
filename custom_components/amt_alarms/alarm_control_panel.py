@@ -27,7 +27,7 @@ from .const import (
     LOGGER,
 )
 
-from .schema import partition_none
+from .schema import partition_none, partition_on
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the alarm platform."""
