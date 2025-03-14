@@ -172,7 +172,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_NIGHT_PARTITION_4: self.night_mode_input[CONF_NIGHT_PARTITION_4],
                     }
 
-                LOGGER.debug(f"device_config {device_config}")
+                _LOGGER.debug(f"device_config {device_config}")
 
                 return self.async_create_entry(title=info["title"],
                                                data=device_config)
