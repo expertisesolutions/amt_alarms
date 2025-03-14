@@ -127,24 +127,6 @@ class AlarmPanel(AlarmControlPanelEntity):
         return self.hub.alarm.model
 
     @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
-        return AlarmControlPanelEntityFeature(
-            (
-                AlarmControlPanelEntityFeature.ARM_HOME
-                if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]
-                else 0
-            )
-            | (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]
-                else 0
-            )
-            | AlarmControlPanelEntityFeature.ARM_NIGHT
-            | AlarmControlPanelEntityFeature.TRIGGER
-        )
-
-    @property
     def changed_by(self):
         """Last change triggered by."""
         return self._by
@@ -277,12 +259,6 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
     def name(self):
         """Return the name of the panel."""
         return self.hub.alarm.model + " Partition " + str(self.index+1)
-
-    @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return the list of supported features."""
-        return 
-        )
 
     @property
     def changed_by(self):
