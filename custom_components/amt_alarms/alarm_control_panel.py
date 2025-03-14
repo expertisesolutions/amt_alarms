@@ -186,7 +186,7 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
 
     _attr_should_poll = False
     _attr_supported_features = (
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        AlarmControlPanelEntityFeature.ARM_NIGHT
         | AlarmControlPanelEntityFeature.TRIGGER
     )
     _attr_code_arm_required = False
