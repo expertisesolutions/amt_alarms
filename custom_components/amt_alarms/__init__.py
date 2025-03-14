@@ -118,7 +118,7 @@ class AlarmHub:
         """Send arm command with specific mode list"""
         LOGGER.debug(f"config_entry {self.config_entry.data}")
         partitions = [*range(self.max_partitions)]
-        for i in partitions:
+        for i in range(self.max_partitions):
             LOGGER.debug(f"mode_list[i] not in self.config_entry.data: {mode_list[i] not in self.config_entry.data}")
             if mode_list[i] in self.config_entry.data:
                 LOGGER.debug(f"self.config_entry.data[mode_list[i]] != partition_on: {self.config_entry.data[mode_list[i]] != partition_on}")
