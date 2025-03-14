@@ -202,20 +202,38 @@ class AlarmPanel(AlarmControlPanelEntity):
 class PartitionAlarmPanel(AlarmControlPanelEntity):
     """Representation of a alarm."""
 
+    _attr_should_poll = False
+    _attr_supported_features = (
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
+    _attr_code_arm_required = False
+
     def __init__(self, hub: AlarmHub, index: int) -> None:
         """Initialize the alarm."""
         self.index = index
         self._internal_state = STATE_UNAVAILABLE
         self._by = "Felipe"
         self.hub = hub
-
-    @property
-    def code_arm_required(self) -> bool:
-        return self.hub.alarm.default_password == None
+        self._attr_supported_features = (
+            (
+                AlarmControlPanelEntityFeature.ARM_HOME
+                if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]
+                else 0
+            )
+            | (
+                AlarmControlPanelEntityFeature.ARM_AWAY
+                if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]
+                else 0
+            )
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.TRIGGER
+        )
+        self._attr_code_arm_required = (self.hub.alarm.default_password == None)
 
     @property
     def code_format(self) -> CodeFormat | None:
-        if self.code_arm_required:
+        if self._attr_code_arm_required:
             return CodeFormat.NUMBER
         else:
             return None
@@ -263,19 +281,7 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        return AlarmControlPanelEntityFeature(
-            (
-                AlarmControlPanelEntityFeature.ARM_HOME
-                if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]
-                else 0
-            )
-            | (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]
-                else 0
-            )
-            | AlarmControlPanelEntityFeature.ARM_NIGHT
-            | AlarmControlPanelEntityFeature.TRIGGER
+        return 
         )
 
     @property
