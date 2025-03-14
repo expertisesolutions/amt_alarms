@@ -185,11 +185,6 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
     """Representation of a alarm."""
 
     _attr_should_poll = False
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_NIGHT
-        | AlarmControlPanelEntityFeature.TRIGGER
-    )
-    _attr_code_arm_required = False
 
     def __init__(self, hub: AlarmHub, index: int) -> None:
         """Initialize the alarm."""
@@ -197,20 +192,15 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
         self._internal_state = STATE_UNAVAILABLE
         self._by = "Felipe"
         self.hub = hub
-        self._attr_supported_features = (
-            (
-                AlarmControlPanelEntityFeature.ARM_HOME
-                if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]
-                else 0
-            )
-            | (
-                AlarmControlPanelEntityFeature.ARM_AWAY
-                if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]
-                else 0
-            )
-            | AlarmControlPanelEntityFeature.ARM_NIGHT
-            | AlarmControlPanelEntityFeature.TRIGGER
-        )
+        supported_features = AlarmControlPanelEntityFeature(0)
+        if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]:
+            supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_HOME)
+        if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]:
+            supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_AWAY)
+        supported_features = (supported_features
+                              | AlarmControlPanelEntityFeature.ARM_NIGHT
+                              | AlarmControlPanelEntityFeature.TRIGGER)
+        self._attr_supported_features = supported_features
         self._attr_code_arm_required = (self.hub.alarm.default_password == None)
 
     @property
