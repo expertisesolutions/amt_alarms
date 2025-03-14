@@ -292,7 +292,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self.home_mode_input = home_mode_input
 
-                return self.async_create_entry(title=info["title"], data=config)
+                return self.async_create_entry(title=info["title"],
+                                               data={self.user_input,self.night_mode_input,
+                                                     self.away_mode_input, home_mode_input})
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
