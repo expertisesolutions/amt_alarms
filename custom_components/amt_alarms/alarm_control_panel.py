@@ -71,7 +71,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 class AlarmPanel(AlarmControlPanelEntity):
-    """Representation of a alarm."""
+    """Representation of a alarm panel."""
+
+    _attr_should_poll = False
 
     def __init__(self, hub: AlarmHub) -> None:
         """Initialize the alarm."""
@@ -79,10 +81,16 @@ class AlarmPanel(AlarmControlPanelEntity):
         self._internal_state = STATE_UNAVAILABLE
         self._by = "Felipe"
         self.hub = hub
-
-    @property
-    def code_arm_required(self) -> bool:
-        return self.hub.alarm.default_password == None
+        supported_features = AlarmControlPanelEntityFeature(0)
+        if self.hub.config_entry.data[CONF_HOME_MODE_ENABLED]:
+            supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_HOME)
+        if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]:
+            supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_AWAY)
+        supported_features = (supported_features
+                              | AlarmControlPanelEntityFeature.ARM_NIGHT
+                              | AlarmControlPanelEntityFeature.TRIGGER)
+        self._attr_supported_features = supported_features
+        self._attr_code_arm_required = (self.hub.alarm.default_password == None)
 
     @property
     def code_format(self) -> CodeFormat | None:
@@ -110,11 +118,6 @@ class AlarmPanel(AlarmControlPanelEntity):
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
         self.hub.remove_listen_event(self)
-
-    @property
-    def should_poll(self):
-        """Declare this Entity as Push."""
-        return False
 
     @property
     def unique_id(self):
@@ -182,7 +185,7 @@ class AlarmPanel(AlarmControlPanelEntity):
 
 
 class PartitionAlarmPanel(AlarmControlPanelEntity):
-    """Representation of a alarm."""
+    """Representation of a alarm partition."""
 
     _attr_should_poll = False
 
@@ -229,11 +232,6 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
         self.hub.remove_listen_event(self)
-
-    @property
-    def should_poll(self):
-        """Declare this Entity as Push."""
-        return False
 
     @property
     def panel_unique_id(self):
