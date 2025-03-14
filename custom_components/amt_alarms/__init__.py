@@ -119,7 +119,7 @@ class AlarmHub:
         partitions = range(self.max_partitions)
         for i in partitions:
             if (mode_list[i] not in self.config_entry.data or
-                self.config_entry.data[mode_list[i]] == partition_off):
+                self.config_entry.data[mode_list[i]] != partition_on):
                 partitions.remove(i)
         if len(partitions) == self.max_partitions:
             await self.alarm.send_arm(code)

@@ -158,6 +158,15 @@ class AlarmPanel(AlarmControlPanelEntity):
     def alarm_state(self) -> AlarmControlPanelState | None:
         return self._internal_state
 
+    def _is_armed_mode(mode_list):
+        for i in range(self.hub.max_partitions):
+            value = partition_none
+            if mode_list[i] in self.hub.config_entry.data:
+                value = self.hub.config_entry.data[mode_list[i]]
+                if value == partition_on and not partitions[i]:
+                    return False
+        return True
+
     def update_state(self):
         """Update synchronously to current state."""
         partitions = self.hub.get_partitions()
@@ -170,7 +179,16 @@ class AlarmPanel(AlarmControlPanelEntity):
         elif not any(partitions):
             self._internal_state = AlarmControlPanelState.DISARMED
         else:
-            self._internal_state = AlarmControlPanelState.ARMED_NIGHT
+            is_armed_night = _is_armed_mode(CONF_NIGHT_PARTITION_LIST)
+            is_armed_home = _is_armed_mode(CONF_HOME_PARTITION_LIST)
+            is_armed_away = _is_armed_mode(CONF_AWAY_PARTITION_LIST)
+
+            if is_armed_home:
+                self._internal_state = AlarmControlPanelState.ARMED_HOME
+            if is_armed_away:
+                self._internal_state = AlarmControlPanelState.ARMED_AWAY
+            if is_armed_night:
+                self._internal_state = AlarmControlPanelState.ARMED_NIGHT
         return self._internal_state != old_state
 
     @callback
