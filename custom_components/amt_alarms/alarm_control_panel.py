@@ -7,7 +7,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.alarm_control_panel import (
@@ -55,6 +55,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for panel in panels:
         panel.update_state()
 
+    add_entities(panels)
+
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -83,8 +85,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         {vol.Optional(ATTR_CODE): cv.string},
         SERVICE_FIRE_TRIGGER,
     )
-
-    add_entities(panels)
 
     hass.helpers.discovery.load_platform('binary_sensor', DOMAIN, {}, config)
 
