@@ -139,7 +139,7 @@ class AlarmPanel(AlarmControlPanelEntity):
         """Entity was added to Home Assistant."""
         self.hub.remove_listen_event(self)
 
-    async def alarm_bypass(self, code: None | str = None, zones : None | [int] = None):
+    async def alarm_bypass(self, code: None | str = None, zones = None):
         """Bypass zones in the alarm system."""
         if zones is None:
             _LOGGER.warning("No zones specified for bypass")
