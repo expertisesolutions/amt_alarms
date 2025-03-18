@@ -103,6 +103,35 @@ async def async_setup_entry(
 
     async_add_entities(panels)
 
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_BYPASS_ZONE,
+        {vol.Required(ATTR_ZONES): cv.ensure_list,
+         vol.Optional(ATTR_CODE): cv.string},
+        "alarm_bypass",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SILENT_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_SILENT_TRIGGER,
+    )
+    platform.async_register_entity_service(
+        SERVICE_AUDIBLE_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_AUDIBLE_TRIGGER,
+    )
+    platform.async_register_entity_service(
+        SERVICE_MEDICAL_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_MEDICAL_TRIGGER,
+    )
+    platform.async_register_entity_service(
+        SERVICE_FIRE_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_FIRE_TRIGGER,
+    )
+
     return True
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
