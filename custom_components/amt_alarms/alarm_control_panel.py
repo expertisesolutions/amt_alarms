@@ -17,6 +17,8 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat
 )
 
+import voluptuous as vol
+
 from . import AlarmHub
 from .const import (
     CONF_AWAY_MODE_ENABLED,
