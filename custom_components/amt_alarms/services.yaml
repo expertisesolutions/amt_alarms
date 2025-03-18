@@ -8,9 +8,9 @@ bypass_zone:
   fields:
     zone:
       required: true
+      example:
+        - "[0,1,2,3,4]"
       selector:
-        example:
-          - "[0,1,2,3,4]"
         object:
     code:
       required: false
