@@ -46,5 +46,61 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "services": {
+    "bypass_zone": {
+      "name": "Bypass Zone",
+      "description": "Sets zones to be bypassed when arming.",
+      "fields": {
+        "zones": {
+          "name": "Zones",
+          "description": "Zones to be bypassed."
+        },
+        "code": {
+          "name": "Code",
+          "description": "Code to be used to add the bypasses."
+        }
+      }
+    },
+    "alarm_silent_trigger": {
+      "name": "Silent trigger",
+      "description": "Silent trigger the alarm",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to be used to trigger the alarm."
+        }
+      }
+    },
+    "alarm_audible_trigger": {
+      "name": "Audible trigger",
+      "description": "Audible trigger the alarm",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to be used to trigger the alarm."
+        }
+      }
+    },
+    "alarm_medical_trigger": {
+      "name": "Medical trigger",
+      "description": "Medical trigger the alarm",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to be used to trigger the alarm."
+        }
+      }
+    },
+    "alarm_fire_trigger": {
+      "name": "Fire trigger",
+      "description": "Fire trigger the alarm",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to be used to trigger the alarm."
+        }
+      }
+    }
   }
 }
