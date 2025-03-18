@@ -1,0 +1,67 @@
+# Describes the format for available amt_alarms services
+
+bypass_zone:
+  target:
+    entity:
+      integration: amt_alarms
+      domain: alarm_control_panel
+  fields:
+    zone:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 63
+    code:
+      required: false
+      example: 999999
+      selector:
+        text:
+
+alarm_silent_trigger:
+  target:
+    entity:
+      integration: amt_alarms
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: false
+      example: 999999
+      selector:
+        text:
+
+alarm_audible_trigger:
+  target:
+    entity:
+      integration: amt_alarms
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: false
+      example: 999999
+      selector:
+        text:
+
+alarm_medical_trigger:
+  target:
+    entity:
+      integration: amt_alarms
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: false
+      example: 999999
+      selector:
+        text:
+
+alarm_fire_trigger:
+  target:
+    entity:
+      integration: amt_alarms
+      domain: alarm_control_panel
+  fields:
+    code:
+      required: false
+      example: 999999
+      selector:
+        text:
