@@ -134,7 +134,10 @@ class AlarmPanel(AlarmControlPanelEntity):
 
     @property
     def code_format(self) -> CodeFormat | None:
-        return CodeFormat.NUMBER
+        if self._attr_code_arm_required:
+            return CodeFormat.NUMBER
+        else:
+            return None
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
@@ -317,7 +320,10 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
 
     @property
     def code_format(self) -> CodeFormat | None:
-        return CodeFormat.NUMBER
+        if self._attr_code_arm_required:
+            return CodeFormat.NUMBER
+        else:
+            return None
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command."""
