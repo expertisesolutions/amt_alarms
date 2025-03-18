@@ -11,5 +11,5 @@
   "requirements": ["crcengine==0.2", "amtalarm @ git+https://github.com/expertisesolutions/amtalarm.git"],
   "ssdp": [],
   "zeroconf": [],
-  "version": "0.0.5.4"
+  "version": "0.0.5.5"
 }
