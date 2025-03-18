@@ -90,7 +90,8 @@ class AlarmPanel(AlarmControlPanelEntity):
             supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_AWAY)
         supported_features = (supported_features
                               | AlarmControlPanelEntityFeature.ARM_NIGHT
-                              | AlarmControlPanelEntityFeature.TRIGGER)
+                              | AlarmControlPanelEntityFeature.TRIGGER
+                              | AlarmControlPanelEntityFeature.BYPASS)
         self._attr_supported_features = supported_features
         self._attr_code_arm_required = (self.hub.alarm.default_password == None)
 
@@ -113,6 +114,10 @@ class AlarmPanel(AlarmControlPanelEntity):
         """Send arm away command."""
         await self.hub.async_alarm_arm_away(code)
 
+    async def async_alarm_trigger(self, code=None):
+        """Send arm away command."""
+        await self.hub.alarm.send_audible_trigger(code)
+
     async def async_added_to_hass(self):
         """Entity was added to Home Assistant."""
         self.hub.listen_event(self)
@@ -120,6 +125,38 @@ class AlarmPanel(AlarmControlPanelEntity):
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
         self.hub.remove_listen_event(self)
+
+    async def async_alarm_bypass(self, code=None, zone_ids=None):
+        """Bypass zones in the alarm system."""
+        if zone_ids is None:
+            _LOGGER.warning("No zones specified for bypass")
+            return False
+        
+        await self.hub.alarm.send_bypass(zone_ids, code)
+
+        return True
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        attributes = super().extra_state_attributes
+        if attributes is None:
+            attributes = {}
+        
+        bypassed_zones = []
+        for i in range(self.hub.alarm.max_sensors):
+            if self.hub.alarm.bypassed_sensors[i]:
+                bypassed_zones += [i]
+
+        attributes.update({
+            "bypassed_zones": bypassed_zones,
+        })
+        return attributes
+
+    @property
+    def available_zones(self):
+        """Return a list of available zones."""
+        return list(range(self.hub.alarm.max_sensors))
 
     @property
     def unique_id(self):
@@ -221,8 +258,7 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
         if self.hub.config_entry.data[CONF_AWAY_MODE_ENABLED]:
             supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_AWAY)
         supported_features = (supported_features
-                              | AlarmControlPanelEntityFeature.ARM_NIGHT
-                              | AlarmControlPanelEntityFeature.TRIGGER)
+                              | AlarmControlPanelEntityFeature.ARM_NIGHT)
         self._attr_supported_features = supported_features
         self._attr_code_arm_required = (self.hub.alarm.default_password == None)
 
