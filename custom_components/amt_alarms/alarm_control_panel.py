@@ -33,6 +33,10 @@ from .schema import partition_none, partition_on
 SERVICE_BYPASS_ZONE = "bypass_zone"
 ATTR_ZONES = "zones"
 ATTR_CODE = "code"
+SERVICE_SILENT_TRIGGER = "alarm_silent_trigger"
+SERVICE_AUDIBLE_TRIGGER = "alarm_audible_trigger"
+SERVICE_MEDICAL_TRIGGER = "alarm_medical_trigger"
+SERVICE_FIRE_TRIGGER = "alarm_fire_trigger"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the alarm platform."""
@@ -58,6 +62,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         {vol.Required(ATTR_ZONES): cv.ensure_list,
          vol.Optional(ATTR_CODE): cv.string},
         "alarm_bypass",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SILENT_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_SILENT_TRIGGER,
+    )
+    platform.async_register_entity_service(
+        SERVICE_AUDIBLE_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_AUDIBLE_TRIGGER,
+    )
+    platform.async_register_entity_service(
+        SERVICE_MEDICAL_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_MEDICAL_TRIGGER,
+    )
+    platform.async_register_entity_service(
+        SERVICE_FIRE_TRIGGER,
+        {vol.Optional(ATTR_CODE): cv.string},
+        SERVICE_FIRE_TRIGGER,
     )
 
     add_entities(panels)
@@ -138,6 +162,26 @@ class AlarmPanel(AlarmControlPanelEntity):
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
         self.hub.remove_listen_event(self)
+
+    async def alarm_silent_trigger(self, code: None | str = None):
+        """Silent trigger alarm in the alarm system."""
+        await self.hub.alarm.send_silent_trigger(code)
+        return True
+
+    async def alarm_audible_trigger(self, code: None | str = None):
+        """Audible trigger alarm in the alarm system."""
+        await self.hub.alarm.send_audible_trigger(code)
+        return True
+
+    async def alarm_medical_trigger(self, code: None | str = None):
+        """Audible trigger alarm in the alarm system."""
+        await self.hub.alarm.send_medical_trigger(code)
+        return True
+
+    async def alarm_fire_trigger(self, code: None | str = None):
+        """Audible trigger alarm in the alarm system."""
+        await self.hub.alarm.send_fire_trigger(code)
+        return True
 
     async def alarm_bypass(self, code: None | str = None, zones = None):
         """Bypass zones in the alarm system."""
