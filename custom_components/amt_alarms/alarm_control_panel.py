@@ -7,6 +7,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.alarm_control_panel import (
@@ -29,6 +30,10 @@ from .const import (
 
 from .schema import partition_none, partition_on
 
+SERVICE_BYPASS_ZONE = "bypass_zone"
+ATTR_ZONES = "zones"
+ATTR_CODE = "code"
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the alarm platform."""
     LOGGER.debug("setup_platform alarm_control_panel")
@@ -45,6 +50,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for panel in panels:
         panel.update_state()
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_BYPASS_ZONE,
+        {vol.Required(ATTR_ZONES): cv.ensure_list,
+         vol.Optional(ATTR_CODE): cv.string},
+        "alarm_bypass",
+    )
 
     add_entities(panels)
 
@@ -90,8 +104,7 @@ class AlarmPanel(AlarmControlPanelEntity):
             supported_features = (supported_features | AlarmControlPanelEntityFeature.ARM_AWAY)
         supported_features = (supported_features
                               | AlarmControlPanelEntityFeature.ARM_NIGHT
-                              | AlarmControlPanelEntityFeature.TRIGGER
-                              | AlarmControlPanelEntityFeature.BYPASS)
+                              | AlarmControlPanelEntityFeature.TRIGGER)
         self._attr_supported_features = supported_features
         self._attr_code_arm_required = (self.hub.alarm.default_password == None)
 
@@ -126,14 +139,13 @@ class AlarmPanel(AlarmControlPanelEntity):
         """Entity was added to Home Assistant."""
         self.hub.remove_listen_event(self)
 
-    async def async_alarm_bypass(self, code=None, zone_ids=None):
+    async def alarm_bypass(self, code: None | str = None, zones : None | [int] = None):
         """Bypass zones in the alarm system."""
-        if zone_ids is None:
+        if zones is None:
             _LOGGER.warning("No zones specified for bypass")
             return False
         
-        await self.hub.alarm.send_bypass(zone_ids, code)
-
+        await self.hub.alarm.send_bypass(zones, code)
         return True
 
     @property
