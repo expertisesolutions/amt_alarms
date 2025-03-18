@@ -6,7 +6,7 @@ bypass_zone:
       integration: amt_alarms
       domain: alarm_control_panel
   fields:
-    zone:
+    zones:
       required: true
       example:
         - "[0,1,2,3,4]"
