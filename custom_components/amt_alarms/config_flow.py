@@ -31,7 +31,6 @@ from .schema import (
     user_schema, night_partition_schema,
     away_mode_partition_schema,
     home_mode_partition_schema,
-    partition_on, partition_off, partition_none,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,31 +41,6 @@ DATA_SCHEMA = vol.All(
     vol.Schema(away_mode_partition_schema),
     vol.Schema(home_mode_partition_schema),
 )
-
-def convert_input(data):
-    """Convert input to configuration."""
-    for i in (
-        CONF_NIGHT_PARTITION_1,
-        CONF_NIGHT_PARTITION_2,
-        CONF_NIGHT_PARTITION_3,
-        CONF_NIGHT_PARTITION_4,
-        CONF_AWAY_PARTITION_1,
-        CONF_AWAY_PARTITION_2,
-        CONF_AWAY_PARTITION_3,
-        CONF_AWAY_PARTITION_4,
-        CONF_HOME_PARTITION_1,
-        CONF_HOME_PARTITION_2,
-        CONF_HOME_PARTITION_3,
-        CONF_HOME_PARTITION_4,
-    ):
-        if i in data:
-            if data[i] == partition_on:
-                data[i] = True
-            elif data[i] == partition_off:
-                data[i] = False
-            else:
-                del data[i]
-    return data
 
 
 async def validate_user_input(hass: core.HomeAssistant, data):
@@ -174,8 +148,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
                 _LOGGER.debug(f"device_config {device_config}")
 
-                return self.async_create_entry(title=info["title"],
-                                               data=device_config)
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=device_config
+                )
+                return self.async_create_entry(title="", data={})
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

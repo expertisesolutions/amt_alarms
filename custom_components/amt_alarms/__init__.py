@@ -73,12 +73,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     LOGGER.debug("async_unload_entry")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        if DOMAIN in hass.data:
-            hass.data[DOMAIN].close()
-            hass.data[DOMAIN]  = None
-        else:
-            entry.runtime_data.close()
-            entry.runtime_data = None
+        entry.runtime_data.close()
+        entry.runtime_data = None
 
     return unload_ok
 
@@ -209,9 +205,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     alarm = AlarmHub(hass, entry, entry.data["port"], default_password=password)
     entry.runtime_data = alarm
 
-    await alarm.wait_connection_and_update()
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await alarm.wait_connection_and_update()
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        alarm.close()
+        raise
 
     return True
 

@@ -119,12 +119,6 @@ class AlarmSensor(BinarySensorEntity):
         """Return state."""
         return self._state
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        self.hub.listen_event(self)
-        # print ("Binary Sensor is calling listen event (from async)", file=sys.stderr)
-        await self.hub.async_update()
-
     def update_state(self):
         """Update synchronously to current state."""
         old_state = self._state

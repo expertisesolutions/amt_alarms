@@ -217,7 +217,7 @@ class AlarmPanel(AlarmControlPanelEntity):
     async def alarm_bypass(self, code: None | str = None, zones = None):
         """Bypass zones in the alarm system."""
         if zones is None:
-            _LOGGER.warning("No zones specified for bypass")
+            LOGGER.warning("No zones specified for bypass")
             return False
         
         await self.hub.alarm.send_bypass(zones, code)
@@ -276,22 +276,20 @@ class AlarmPanel(AlarmControlPanelEntity):
         """Return the state attributes."""
         return {"device_id": self.unique_id}
 
-    async def async_update(self):
-        """Update the state of the device."""
-        await self.hub.async_update()
-
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         return self._internal_state
 
     def _is_armed_mode(self, partitions, mode_list):
+        has_any_partition = False
         for i in range(self.hub.max_partitions):
-            value = partition_none
             if mode_list[i] in self.hub.config_entry.data:
                 value = self.hub.config_entry.data[mode_list[i]]
-                if value == partition_on and not partitions[i]:
-                    return False
-        return True
+                if value == partition_on:
+                    has_any_partition = True
+                    if not partitions[i]:
+                        return False
+        return has_any_partition
 
     def update_state(self):
         """Update synchronously to current state."""
@@ -309,12 +307,12 @@ class AlarmPanel(AlarmControlPanelEntity):
             is_armed_home = self._is_armed_mode(partitions, CONF_HOME_PARTITION_LIST)
             is_armed_away = self._is_armed_mode(partitions, CONF_AWAY_PARTITION_LIST)
 
-            if is_armed_home:
-                self._internal_state = AlarmControlPanelState.ARMED_HOME
-            if is_armed_away:
-                self._internal_state = AlarmControlPanelState.ARMED_AWAY
             if is_armed_night:
                 self._internal_state = AlarmControlPanelState.ARMED_NIGHT
+            elif is_armed_away:
+                self._internal_state = AlarmControlPanelState.ARMED_AWAY
+            elif is_armed_home:
+                self._internal_state = AlarmControlPanelState.ARMED_HOME
         return self._internal_state != old_state
 
     @callback
@@ -357,15 +355,15 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
             return None
 
     async def async_alarm_arm_night(self, code=None):
-        """Send arm night command."""
+        """Send arm partition command."""
         await self.hub.alarm.send_arm_partition(self.index, code)
 
     async def async_alarm_arm_away(self, code=None):
-        """Send arm night command."""
+        """Send arm partition command."""
         await self.hub.alarm.send_arm_partition(self.index, code)
 
     async def async_alarm_arm_home(self, code=None):
-        """Send arm night command."""
+        """Send arm partition command."""
         await self.hub.alarm.send_arm_partition(self.index, code)
 
     async def async_added_to_hass(self):
@@ -413,10 +411,6 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
         """Return the state attributes."""
         return {"device_id": self.unique_id}
 
-    async def async_update(self):
-        """Update the state of the device."""
-        await self.hub.async_update()
-
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         return self._internal_state
@@ -428,15 +422,12 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
         old_state = self._internal_state
         if None in partitions:
             self._internal_state = STATE_UNAVAILABLE
+        elif triggered_partitions[self.index]:
+            self._internal_state = AlarmControlPanelState.TRIGGERED
         elif partitions[self.index]:
             self._internal_state = AlarmControlPanelState.ARMED_NIGHT
         else:
             self._internal_state = AlarmControlPanelState.DISARMED
-        if (
-            triggered_partitions[self.index] is not None
-            and triggered_partitions[self.index]
-        ):
-            self._internal_state = AlarmControlPanelState.TRIGGERED
         return self._internal_state != old_state
 
     @callback
