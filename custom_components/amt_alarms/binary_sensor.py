@@ -1,7 +1,5 @@
 """Platform for AMT Intelbras Alarms Sensors."""
 
-import sys
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -40,7 +38,7 @@ async def async_setup_entry(
         if hub.is_sensor_configured(i):
             sensors += [AlarmSensor(i, hub)]
 
-    print("adding ", len(sensors), " sensors", file=sys.stderr)
+    LOGGER.debug("adding %d sensors", len(sensors))
     for sensor in sensors:
         sensor.update_state()
 
