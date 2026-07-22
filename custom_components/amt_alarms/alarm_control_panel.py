@@ -9,6 +9,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -31,6 +32,8 @@ from .const import (
 )
 
 from .schema import partition_none, partition_on
+
+UNAVAILABLE_GRACE_SECONDS = 30
 
 SERVICE_BYPASS_ZONE = "bypass_zone"
 ATTR_ZONES = "zones"
@@ -150,6 +153,7 @@ class AlarmPanel(AlarmControlPanelEntity):
         """Initialize the alarm."""
         LOGGER.debug("AlarmPanel instantiation")
         self._internal_state = STATE_UNAVAILABLE
+        self._unavailable_unsub = None
         self._by = "Felipe"
         self.hub = hub
         supported_features = AlarmControlPanelEntityFeature(0)
@@ -192,6 +196,7 @@ class AlarmPanel(AlarmControlPanelEntity):
 
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
+        self._cancel_unavailable_timer()
         self.hub.remove_listen_event(self)
 
     async def alarm_silent_trigger(self, code: None | str = None):
@@ -291,34 +296,54 @@ class AlarmPanel(AlarmControlPanelEntity):
                         return False
         return has_any_partition
 
-    def update_state(self):
-        """Update synchronously to current state."""
+    def _compute_raw_state(self):
         partitions = self.hub.get_partitions()
         triggered_partitions = self.hub.get_triggered_partitions()
-        old_state = self._internal_state
         if None in partitions:
-            self._internal_state = STATE_UNAVAILABLE
-        elif True in triggered_partitions:
-            self._internal_state = AlarmControlPanelState.TRIGGERED
-        elif not any(partitions):
-            self._internal_state = AlarmControlPanelState.DISARMED
-        else:
-            is_armed_night = self._is_armed_mode(partitions, CONF_NIGHT_PARTITION_LIST)
-            is_armed_home = self._is_armed_mode(partitions, CONF_HOME_PARTITION_LIST)
-            is_armed_away = self._is_armed_mode(partitions, CONF_AWAY_PARTITION_LIST)
+            return STATE_UNAVAILABLE
+        if True in triggered_partitions:
+            return AlarmControlPanelState.TRIGGERED
+        if not any(partitions):
+            return AlarmControlPanelState.DISARMED
+        if self._is_armed_mode(partitions, CONF_NIGHT_PARTITION_LIST):
+            return AlarmControlPanelState.ARMED_NIGHT
+        if self._is_armed_mode(partitions, CONF_AWAY_PARTITION_LIST):
+            return AlarmControlPanelState.ARMED_AWAY
+        if self._is_armed_mode(partitions, CONF_HOME_PARTITION_LIST):
+            return AlarmControlPanelState.ARMED_HOME
+        return self._internal_state
 
-            if is_armed_night:
-                self._internal_state = AlarmControlPanelState.ARMED_NIGHT
-            elif is_armed_away:
-                self._internal_state = AlarmControlPanelState.ARMED_AWAY
-            elif is_armed_home:
-                self._internal_state = AlarmControlPanelState.ARMED_HOME
+    def update_state(self):
+        """Update synchronously to current state (used at setup)."""
+        old_state = self._internal_state
+        self._internal_state = self._compute_raw_state()
         return self._internal_state != old_state
+
+    def _cancel_unavailable_timer(self):
+        if self._unavailable_unsub is not None:
+            self._unavailable_unsub()
+            self._unavailable_unsub = None
+
+    @callback
+    def _async_apply_unavailable(self, _now):
+        self._unavailable_unsub = None
+        if None in self.hub.get_partitions() and self._internal_state != STATE_UNAVAILABLE:
+            self._internal_state = STATE_UNAVAILABLE
+            self.async_write_ha_state()
 
     @callback
     def alarm_update(self):
-        """Receive callback to update state from Hub."""
-        if self.update_state():
+        """Receive callback to update state from Hub, debouncing unavailable."""
+        raw_state = self._compute_raw_state()
+        if raw_state == STATE_UNAVAILABLE and self._internal_state != STATE_UNAVAILABLE:
+            if self._unavailable_unsub is None:
+                self._unavailable_unsub = async_call_later(
+                    self.hass, UNAVAILABLE_GRACE_SECONDS, self._async_apply_unavailable
+                )
+            return
+        self._cancel_unavailable_timer()
+        if raw_state != self._internal_state:
+            self._internal_state = raw_state
             self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code=None):
@@ -335,6 +360,7 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
         """Initialize the alarm."""
         self.index = index
         self._internal_state = STATE_UNAVAILABLE
+        self._unavailable_unsub = None
         self._by = "Felipe"
         self.hub = hub
         supported_features = AlarmControlPanelEntityFeature(0)
@@ -372,6 +398,7 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
 
     async def async_will_remove_from_hass(self):
         """Entity was added to Home Assistant."""
+        self._cancel_unavailable_timer()
         self.hub.remove_listen_event(self)
 
     @property
@@ -415,25 +442,48 @@ class PartitionAlarmPanel(AlarmControlPanelEntity):
     def alarm_state(self) -> AlarmControlPanelState | None:
         return self._internal_state
 
-    def update_state(self):
-        """Update synchronously to current state."""
+    def _compute_raw_state(self):
         partitions = self.hub.get_partitions()
         triggered_partitions = self.hub.get_triggered_partitions()
-        old_state = self._internal_state
         if None in partitions:
-            self._internal_state = STATE_UNAVAILABLE
-        elif triggered_partitions[self.index]:
-            self._internal_state = AlarmControlPanelState.TRIGGERED
-        elif partitions[self.index]:
-            self._internal_state = AlarmControlPanelState.ARMED_NIGHT
-        else:
-            self._internal_state = AlarmControlPanelState.DISARMED
+            return STATE_UNAVAILABLE
+        if triggered_partitions[self.index]:
+            return AlarmControlPanelState.TRIGGERED
+        if partitions[self.index]:
+            return AlarmControlPanelState.ARMED_NIGHT
+        return AlarmControlPanelState.DISARMED
+
+    def update_state(self):
+        """Update synchronously to current state (used at setup)."""
+        old_state = self._internal_state
+        self._internal_state = self._compute_raw_state()
         return self._internal_state != old_state
+
+    def _cancel_unavailable_timer(self):
+        if self._unavailable_unsub is not None:
+            self._unavailable_unsub()
+            self._unavailable_unsub = None
+
+    @callback
+    def _async_apply_unavailable(self, _now):
+        self._unavailable_unsub = None
+        if None in self.hub.get_partitions() and self._internal_state != STATE_UNAVAILABLE:
+            self._internal_state = STATE_UNAVAILABLE
+            self.async_write_ha_state()
 
     @callback
     def alarm_update(self):
-        """Receive callback to update state from Hub."""
-        if self.update_state():
+        """Receive callback to update state from Hub, debouncing unavailable."""
+        raw_state = self._compute_raw_state()
+        if raw_state == STATE_UNAVAILABLE and self._internal_state != STATE_UNAVAILABLE:
+            if self._unavailable_unsub is None:
+                self._unavailable_unsub = async_call_later(
+                    self.hass, UNAVAILABLE_GRACE_SECONDS, self._async_apply_unavailable
+                )
+            return
+        self._cancel_unavailable_timer()
+        if raw_state != self._internal_state:
+            self._internal_state = raw_state
             self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code=None):
