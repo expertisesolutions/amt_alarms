@@ -66,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -83,7 +83,8 @@ class AlarmHub:
     """Placeholder class to make tests pass."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, port, default_password=None
+        self, hass: HomeAssistant, config_entry: ConfigEntry, port, default_password=None,
+        system_password=None, isecprogram_poll_interval=1800
     ) -> None:
         """Initialize."""
 
@@ -97,7 +98,10 @@ class AlarmHub:
         self.hass = hass
         self.config_entry = config_entry
 
-        self.alarm = AMTAlarm(port, default_password=default_password, logger=LOGGER)
+        self.alarm = AMTAlarm(
+            port, default_password=default_password, system_password=system_password,
+            isecprogram_poll_interval=isecprogram_poll_interval, logger=LOGGER,
+        )
 
     @property
     def name(self):
@@ -201,8 +205,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password=None
     if "password" in entry.data:
        password=entry.data["password"]
+    system_password = entry.data.get("system_password")
+    poll_interval = entry.data.get("isecprogram_poll_interval", 1800)
     LOGGER.debug("instantiating AlarmHub entry")
-    alarm = AlarmHub(hass, entry, entry.data["port"], default_password=password)
+    alarm = AlarmHub(hass, entry, entry.data["port"], default_password=password,
+                     system_password=system_password, isecprogram_poll_interval=poll_interval)
     entry.runtime_data = alarm
 
     try:

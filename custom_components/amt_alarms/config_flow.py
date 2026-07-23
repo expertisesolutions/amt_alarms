@@ -18,12 +18,15 @@ from .const import (
     CONF_HOME_PARTITION_2,
     CONF_HOME_PARTITION_3,
     CONF_HOME_PARTITION_4,
+    CONF_ISECPROGRAM_POLL_INTERVAL,
     CONF_NIGHT_PARTITION_1,
     CONF_NIGHT_PARTITION_2,
     CONF_NIGHT_PARTITION_3,
     CONF_NIGHT_PARTITION_4,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SYSTEM_PASSWORD,
+    DEFAULT_ISECPROGRAM_POLL_INTERVAL,
     DOMAIN,  # PARTITION_LIST,; pylint:disable=unused-import
 )
 
@@ -130,6 +133,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 device_config = {
                     CONF_PORT: self.user_input[CONF_PORT],
                     CONF_PASSWORD: self.user_input[CONF_PASSWORD],
+                    CONF_SYSTEM_PASSWORD: self.user_input.get(CONF_SYSTEM_PASSWORD),
+                    CONF_ISECPROGRAM_POLL_INTERVAL: self.user_input.get(
+                        CONF_ISECPROGRAM_POLL_INTERVAL, DEFAULT_ISECPROGRAM_POLL_INTERVAL),
                     CONF_AWAY_MODE_ENABLED: self.away_mode_input[CONF_AWAY_MODE_ENABLED],
                     CONF_AWAY_PARTITION_1: self.away_mode_input[CONF_AWAY_PARTITION_1],
                     CONF_AWAY_PARTITION_2: self.away_mode_input[CONF_AWAY_PARTITION_2],
@@ -282,6 +288,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_config = {
                     CONF_PORT: self.user_input[CONF_PORT],
                     CONF_PASSWORD: self.user_input[CONF_PASSWORD],
+                    CONF_SYSTEM_PASSWORD: self.user_input.get(CONF_SYSTEM_PASSWORD),
+                    CONF_ISECPROGRAM_POLL_INTERVAL: self.user_input.get(
+                        CONF_ISECPROGRAM_POLL_INTERVAL, DEFAULT_ISECPROGRAM_POLL_INTERVAL),
                     CONF_AWAY_MODE_ENABLED: self.away_mode_input[CONF_AWAY_MODE_ENABLED],
                     CONF_AWAY_PARTITION_1: self.away_mode_input[CONF_AWAY_PARTITION_1],
                     CONF_AWAY_PARTITION_2: self.away_mode_input[CONF_AWAY_PARTITION_2],
