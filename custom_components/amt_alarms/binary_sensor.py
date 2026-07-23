@@ -38,6 +38,9 @@ async def async_setup_entry(
         if hub.is_sensor_configured(i):
             sensors += [AlarmSensor(i, hub)]
 
+    if hub.alarm.system_password is not None:
+        sensors += [AlarmACPowerSensor(hub)]
+
     LOGGER.debug("adding %d sensors", len(sensors))
     for sensor in sensors:
         sensor.update_state()
@@ -143,3 +146,67 @@ class AlarmSensor(BinarySensorEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return BinarySensorDeviceClass.MOTION
+
+
+class AlarmACPowerSensor(BinarySensorEntity):
+    """Mains power present (from the panel source voltage)."""
+
+    _attr_should_poll = False
+    _attr_device_class = BinarySensorDeviceClass.POWER
+
+    def __init__(self, hub):
+        self.hub = hub
+        self._name = self.hub.alarm.model + " Rede AC"
+        self._unique_id = (self.hub.alarm.model + "_"
+                           + self.hub.alarm._mac_address.hex() + "_ac_power")
+        self._state = STATE_UNAVAILABLE
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def unique_id(self):
+        return self._unique_id
+
+    @property
+    def panel_unique_id(self):
+        return self.hub.alarm.model + "_" + self.hub.alarm._mac_address.hex() + "_alarm_panel"
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "via_device": (DOMAIN, self.panel_unique_id),
+        }
+
+    async def async_added_to_hass(self):
+        self.hub.listen_event(self)
+
+    async def async_will_remove_from_hass(self):
+        self.hub.remove_listen_event(self)
+
+    @property
+    def is_on(self):
+        return self.state == STATE_ON
+
+    @property
+    def state(self):
+        return self._state
+
+    def update_state(self):
+        old_state = self._state
+        gs = self.hub.alarm.general_status
+        if gs is None:
+            self._state = STATE_UNAVAILABLE
+        elif gs.source_voltage > 5.0:
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
+        return self._state != old_state
+
+    @callback
+    def alarm_update(self):
+        if self.update_state():
+            self.async_write_ha_state()
